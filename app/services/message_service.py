@@ -145,27 +145,39 @@ class MessageService:
 
     async def mark_as_read(self, chat_id: str, user_id: str, message_ids: Optional[List[str]] = None):
         if message_ids:
-            await self.db.execute(
-                update(Message)
-                .where(
+            # Faqat berilgan xabarlarni o'qilgan deb belgilash
+            result = await self.db.execute(
+                select(Message).where(
                     Message.id.in_(message_ids),
                     Message.chat_id == chat_id,
                     Message.sender_id != user_id,
                 )
-                .values(is_read=True)
             )
+            messages = result.scalars().all()
+            sender_ids = set()
+            for msg in messages:
+                msg.is_read = True
+                if msg.sender_id:
+                    sender_ids.add(msg.sender_id)
         else:
-            await self.db.execute(
-                update(Message)
-                .where(
+            # Barcha xabarlarni o'qilgan deb belgilash
+            result = await self.db.execute(
+                select(Message).where(
                     Message.chat_id == chat_id,
                     Message.sender_id != user_id,
                     Message.is_read == False,
                 )
-                .values(is_read=True)
             )
+            messages = result.scalars().all()
+            sender_ids = set()
+            message_ids = []
+            for msg in messages:
+                msg.is_read = True
+                message_ids.append(msg.id)
+                if msg.sender_id:
+                    sender_ids.add(msg.sender_id)
 
-        # Update last_read_at for the member
+        # last_read_at yangilash
         await self.db.execute(
             update(ChatMember)
             .where(ChatMember.chat_id == chat_id, ChatMember.user_id == user_id)
@@ -173,6 +185,10 @@ class MessageService:
         )
         await self.db.flush()
 
-        # Notify sender(s) about read receipt
-        if message_ids:
-            await manager.send_read_event(user_id, chat_id, message_ids)
+        # Har bir sender ga read receipt yuborish
+        for sender_id in sender_ids:
+            await manager.send_to_user(sender_id, "message.read", {
+                "chat_id": chat_id,
+                "message_ids": message_ids,
+                "read_by": user_id,
+            })

@@ -72,6 +72,20 @@ async def websocket_endpoint(
                             member_ids = [row[0] for row in result.fetchall()]
                         await manager.send_typing_event(member_ids, user_id, chat_id, is_typing)
 
+                elif event == "message.read":
+                    chat_id = payload.get("chat_id")
+                    message_ids = payload.get("message_ids")
+                    if chat_id:
+                        from app.services.message_service import MessageService
+                        async with AsyncSessionLocal() as db:
+                            service = MessageService(db)
+                            await service.mark_as_read(
+                                chat_id=chat_id,
+                                user_id=user_id,
+                                message_ids=message_ids,
+                            )
+                            await db.commit()
+                            
                 elif event == "ping":
                     await websocket.send_text(json.dumps({"event": "pong", "data": {}}))
 
