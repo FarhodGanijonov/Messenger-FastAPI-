@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Messenger Admin{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 240px; height: 100vh; background: #1a1a2e; color: #fff; padding: 0; overflow-y: auto; }
+        .sidebar-header { padding: 24px 20px; background: #16213e; border-bottom: 1px solid #0f3460; }
+        .sidebar-header h1 { font-size: 18px; font-weight: 700; color: #e94560; }
+        .sidebar-header p { font-size: 12px; color: #8899aa; margin-top: 4px; }
+        .nav-menu { padding: 16px 0; }
+        .nav-item a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #8899aa; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .nav-item a:hover, .nav-item a.active { background: #16213e; color: #fff; border-left: 3px solid #e94560; }
+        .nav-item a span.icon { font-size: 18px; }
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar { background: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e8ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .topbar .user-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #555; }
+        .topbar .logout-btn { padding: 6px 16px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; }
+        .content { padding: 24px; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #e94560; }
+        .stat-card .value { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+        .stat-card .label { font-size: 13px; color: #8899aa; margin-top: 4px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8f9fa; padding: 12px 16px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8ecef; }
+        td { padding: 12px 16px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
+        tr:hover td { background: #fafbfc; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .btn { display: inline-block; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; text-decoration: none; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-danger { background: #e94560; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .search-form { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-form input { flex: 1; padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .search-form button { padding: 8px 18px; background: #1a1a2e; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .pagination { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 20px; }
+        .pagination a, .pagination span { padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; }
+        .pagination a { background: #f0f2f5; color: #1a1a2e; }
+        .pagination a:hover { background: #e94560; color: white; }
+        .pagination .current { background: #e94560; color: white; font-weight: 600; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #e94560; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; }
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1a1a2e; }
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h1>💬 Messenger</h1>
+        <p>Admin Panel</p>
+    </div>
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a href="/admin/dashboard" {% if request.url.path == '/admin/dashboard' %}class="active"{% endif %}>
+                <span class="icon">📊</span> Dashboard
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="/admin/users" {% if '/admin/users' in request.url.path %}class="active"{% endif %}>
+                <span class="icon">👥</span> Users
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="/admin/chats" {% if '/admin/chats' in request.url.path %}class="active"{% endif %}>
+                <span class="icon">💬</span> Chats
+            </a>
+        </div>
+    </nav>
+</div>
+<div class="main">
+    <div class="topbar">
+        <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+        <div class="user-info">
+            <span>👤 {{ admin_username }}</span>
+            <a href="/admin/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+</body>
+</html>

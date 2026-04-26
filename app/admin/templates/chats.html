@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Chats — Messenger Admin{% endblock %}
+{% block page_title %}Chats Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="margin-bottom: 16px; font-size: 14px; color: #666;">
+        Total: <strong>{{ total }}</strong> chat{% if total != 1 %}s{% endif %}
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Chat</th>
+                    <th>Type</th>
+                    <th>Members</th>
+                    <th>Messages</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in chat_stats %}
+                {% set chat = item.chat %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="avatar" style="background:{% if chat.type == 'group' %}#007bff{% else %}#28a745{% endif %};">
+                                {% if chat.type == 'group' %}G{% else %}D{% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight:600;">{{ chat.name or 'Direct Chat' }}</div>
+                                <div style="font-size:11px;color:#aaa;">{{ chat.id[:8] }}...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if chat.type == 'group' %}
+                            <span class="badge badge-info">Group</span>
+                        {% else %}
+                            <span class="badge badge-success">Direct</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.member_count }}</strong></td>
+                    <td><strong>{{ item.message_count }}</strong></td>
+                    <td>
+                        {% if chat.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Deleted</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:12px;color:#888;">{{ chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="/admin/chats?page={{ page - 1 }}">← Prev</a>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+                <span class="current">{{ p }}</span>
+            {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <a href="/admin/chats?page={{ p }}">{{ p }}</a>
+            {% elif p == page - 3 or p == page + 3 %}
+                <span>...</span>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+            <a href="/admin/chats?page={{ page + 1 }}">Next →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

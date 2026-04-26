@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: messenger_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: messenger_user
+      POSTGRES_PASSWORD: messenger_pass
+      POSTGRES_DB: messenger_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messenger_user -d messenger_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: messenger_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: messenger_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://messenger_user:messenger_pass@db:5432/messenger_db
+      SYNC_DATABASE_URL: postgresql://messenger_user:messenger_pass@db:5432/messenger_db
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "true"
+      OTP_DEV_MODE: "true"
+      SECRET_KEY: "change-this-in-production-very-long-secret-key-32chars"
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      MEDIA_STORAGE: local
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for DB...' &&
+        sleep 2 &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:

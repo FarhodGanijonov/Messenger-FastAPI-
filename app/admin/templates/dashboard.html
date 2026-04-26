@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Messenger Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="value">{{ stats.users_count }}</div>
+        <div class="label">👥 Total Users</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #28a745;">
+        <div class="value">{{ stats.active_users }}</div>
+        <div class="label">✅ Active Users</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #007bff;">
+        <div class="value">{{ stats.chats_count }}</div>
+        <div class="label">💬 Total Chats</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #fd7e14;">
+        <div class="value">{{ stats.messages_count }}</div>
+        <div class="label">📨 Messages Sent</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #6f42c1;">
+        <div class="value">{{ stats.calls_count }}</div>
+        <div class="label">📞 Total Calls</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">🆕 Recently Joined Users</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in recent_users %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="avatar">{{ (user.full_name or user.phone)[0].upper() }}</div>
+                            <span>{{ user.full_name or 'No name' }}</span>
+                        </div>
+                    </td>
+                    <td>{{ user.phone }}</td>
+                    <td>
+                        {% if user.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Blocked</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top:16px;">
+        <a href="/admin/users" class="btn btn-secondary btn-sm">View All Users →</a>
+    </div>
+</div>
+{% endblock %}
