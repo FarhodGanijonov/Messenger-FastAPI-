@@ -39,7 +39,7 @@ services:
     container_name: messenger_app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://messenger_user:messenger_pass@db:5432/messenger_db
       SYNC_DATABASE_URL: postgresql://messenger_user:messenger_pass@db:5432/messenger_db
